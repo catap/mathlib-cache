@@ -1,0 +1,57 @@
+name: Publish Mathlib cache
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - name: Prepare Lake project
+        run: |
+          cat > lakefile.toml <<EOF
+          name = "mathlib-cache"
+
+          [[require]]
+          name = "mathlib"
+          scope = "leanprover-community"
+          rev = "$RELEASE_TAG"
+          EOF
+
+      - name: Install elan
+        run: |
+          curl --fail --location --silent --show-error \
+            https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | \
+            sh -s -- -y --no-modify-path --default-toolchain "leanprover/lean4:${RELEASE_TAG}"
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Get Mathlib cache
+        env:
+          MATHLIB_NO_CACHE_ON_UPDATE: "1"
+        run: lake exe cache get
+
+      - name: Verify Mathlib cache
+        run: printf 'import Mathlib\n' | lake env lean --stdin
+
+      - name: Compress cache
+        run: |
+          tar -cf - .lake/packages | \
+            zstd -T0 -c > "mathlib-${RELEASE_TAG#v}-cache.tar.zst"
+
+      - name: Upload release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$RELEASE_TAG" \
+            "mathlib-${RELEASE_TAG#v}-cache.tar.zst \
+            --repo "$GITHUB_REPOSITORY"
