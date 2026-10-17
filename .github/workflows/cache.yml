@@ -46,12 +46,12 @@ jobs:
       - name: Compress cache
         run: |
           tar -cf - .lake/packages | \
-            zstd -T0 -c > "mathlib-${RELEASE_TAG#v}-cache.tar.zst"
+            xz -1 -T0 -c > "mathlib-${RELEASE_TAG#v}-cache.tar.xz"
 
       - name: Upload release asset
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$RELEASE_TAG" \
-            "mathlib-${RELEASE_TAG#v}-cache.tar.zst" \
+            "mathlib-${RELEASE_TAG#v}-cache.tar.xz" \
             --repo "$GITHUB_REPOSITORY"
