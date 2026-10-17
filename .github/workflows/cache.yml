@@ -53,5 +53,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$RELEASE_TAG" \
-            "mathlib-${RELEASE_TAG#v}-cache.tar.zst \
+            "mathlib-${RELEASE_TAG#v}-cache.tar.zst" \
             --repo "$GITHUB_REPOSITORY"
