@@ -46,7 +46,7 @@ jobs:
       - name: Compress cache
         run: |
           tar -cf - .lake/packages | \
-            xz -1 -T0 -c > "mathlib-${RELEASE_TAG#v}-cache.tar.xz"
+            xz -9e -T0 -c > "mathlib-${RELEASE_TAG#v}-cache.tar.xz"
 
       - name: Upload release asset
         env:
